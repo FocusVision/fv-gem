@@ -43,6 +43,7 @@ module MySdk
                              :attribute_b
 
     has_many :other_resources
+    belongs_to :related_thing
   end
 end
 ```
@@ -60,4 +61,5 @@ You're good to go!
 ```ruby
 my_resources = MySdk::MyResource.all
 my_resources.first.other_resources.first # MySdk::OtherResource
+my_resources.first.related_thing # MySdk::RelatedThing
 ```

@@ -61,22 +61,46 @@ module FV
     end
 
     def self.has_many(*args)
+      memoize_relationships(*args) do |relationship, to_resource_class|
+        FV::HasManyAssociation.new(
+          self,
+          to_resource_class,
+          relationship
+        ).tap do |association|
+          @associations << association
+        end
+      end
+    end
+
+    def self.belongs_to(*args)
+      memoize_relationships(*args) do |relationship, to_resource_class|
+        to_resource_class.new(
+          self.class.client.request(:get, "#{path}/#{relationship}").data
+        )
+      end
+    end
+
+    def self.memoize_relationships(*args, &block)
       args.each do |relationship|
         define_method(relationship) do
           key = "@#{relationship}"
           return instance_variable_get(key) if instance_variable_defined?(key)
 
-          module_name = self.class.to_s.split('::')[0..-2].join('::')
-          to_resource_classname = relationship.to_s.singularize.camelize
-          association = FV::HasManyAssociation.new(
-            self,
-            "#{module_name}::#{to_resource_classname}".constantize,
-            relationship
+          value = instance_exec(
+            relationship,
+            resource_class_for_relationship(relationship),
+            &block
           )
-          @associations << association
-          instance_variable_set(key, association)
+
+          instance_variable_set(key, value)
         end
       end
+    end
+
+    def resource_class_for_relationship(relationship)
+      module_name = self.class.to_s.split('::')[0..-2].join('::')
+      to_resource_classname = relationship.to_s.singularize.camelize
+      "#{module_name}::#{to_resource_classname}".constantize
     end
 
     def self.client
