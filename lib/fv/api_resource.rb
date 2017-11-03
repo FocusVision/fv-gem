@@ -59,8 +59,9 @@ module FV
         end
 
         define_method("#{attribute}=") do |value|
-          dirty
-          attributes[self.class.transform_key_for_api(attribute)] = value
+          api_key = self.class.transform_key_for_api(attribute)
+          modified_attributes.add(api_key)
+          attributes[api_key] = value
         end
       end
     end
@@ -112,15 +113,15 @@ module FV
       const_get(name.deconstantize)
     end
 
-    attr_reader :id, :attributes, :meta, :links, :relationships
+    attr_reader :id, :attributes, :meta, :links, :relationships, :modified_attributes
 
     def initialize(data)
       handle_new_data(data)
       @associations = []
-      @modified = false
     end
 
     def handle_new_data(data)
+      @modified_attributes = Set.new
       @id = data[:id].to_i
       @attributes = data[:attributes]
       @meta = data[:meta] || {}
@@ -145,14 +146,14 @@ module FV
         data: {
           id: @id,
           type: self.class.resource_type,
-          attributes: @attributes
+          attributes: @attributes.slice(*modified_attributes.to_a)
         }
       }.to_json
     end
 
     def save
       @associations.each(&:save)
-      @modified ? _save : self
+      modified? ? _save : self
     end
 
     def _save
@@ -166,11 +167,7 @@ module FV
     end
 
     def modified?
-      @modified || @associations.any?(&:modified?)
-    end
-
-    def dirty
-      @modified = true
+      !@modified_attributes.empty? || @associations.any?(&:modified?)
     end
 
     def path
