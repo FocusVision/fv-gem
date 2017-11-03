@@ -57,6 +57,11 @@ module FV
         define_method(attribute) do
           attributes[self.class.transform_key_for_api(attribute)]
         end
+
+        define_method("#{attribute}=") do |value|
+          dirty
+          attributes[self.class.transform_key_for_api(attribute)] = value
+        end
       end
     end
 
@@ -109,13 +114,18 @@ module FV
 
     attr_reader :id, :attributes, :meta, :links, :relationships
 
-    def initialize(raw_data)
-      @id = raw_data[:id].to_i
-      @attributes = raw_data[:attributes]
-      @meta = raw_data[:meta] || {}
-      @links = raw_data[:links] || {}
-      @relationships = raw_data[:relationships] || {}
+    def initialize(data)
+      handle_new_data(data)
       @associations = []
+      @modified = false
+    end
+
+    def handle_new_data(data)
+      @id = data[:id].to_i
+      @attributes = data[:attributes]
+      @meta = data[:meta] || {}
+      @links = data[:links] || {}
+      @relationships = data[:relationships] || {}
     end
 
     def to_hash
@@ -131,13 +141,26 @@ module FV
     end
 
     def save
-      return self unless modified?
       @associations.each(&:save)
+      @modified ? _save : self
+    end
+
+    def _save
+      response = self.class.client.request(
+        :patch,
+        path,
+        body: to_hash
+      )
+      handle_new_data(response.data)
       self
     end
 
     def modified?
-      @associations.any?(&:modified?)
+      @modified || @associations.any?(&:modified?)
+    end
+
+    def dirty
+      @modified = true
     end
 
     def path
