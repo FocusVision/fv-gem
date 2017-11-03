@@ -142,9 +142,11 @@ module FV
 
     def to_json
       {
-        id: @id,
-        type: self.class.resource_type,
-        attributes: @attributes
+        data: {
+          id: @id,
+          type: self.class.resource_type,
+          attributes: @attributes
+        }
       }.to_json
     end
 

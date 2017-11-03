@@ -118,9 +118,11 @@ describe FV::ApiResource do
       allow_any_instance_of(FV::Client).to(
         receive(:request)
           .with(:patch, '/foo_bars/3', body: {
-            id: 3,
-            type: 'foo_bars',
-            attributes: { 'name' => 'changed' }
+            data: {
+              id: 3,
+              type: 'foo_bars',
+              attributes: { 'name' => 'changed' }
+            }
           }.to_json)
           .and_return(fake_response)
       )
