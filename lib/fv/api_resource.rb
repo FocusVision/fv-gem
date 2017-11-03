@@ -149,7 +149,7 @@ module FV
       response = self.class.client.request(
         :patch,
         path,
-        body: to_hash
+        body: to_hash.to_json
       )
       handle_new_data(response.data)
       self

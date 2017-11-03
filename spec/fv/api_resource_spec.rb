@@ -121,7 +121,7 @@ describe FV::ApiResource do
             id: 3,
             type: 'foo_bars',
             attributes: { 'name' => 'changed' }
-          })
+          }.to_json)
           .and_return(fake_response)
       )
 
