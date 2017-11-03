@@ -127,7 +127,8 @@ describe FV::ApiResource do
 
       resource = TestSdk::FooBar.new(
         id: 3,
-        attributes: { 'name' => 'original' }
+        attributes: { 'name' => 'original' },
+        meta: { stuff: 1 }
       )
       resource.name = 'changed'
       resource.save

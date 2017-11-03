@@ -140,6 +140,14 @@ module FV
       serialized
     end
 
+    def to_json
+      {
+        id: @id,
+        type: self.class.resource_type,
+        attributes: @attributes
+      }.to_json
+    end
+
     def save
       @associations.each(&:save)
       @modified ? _save : self
@@ -149,7 +157,7 @@ module FV
       response = self.class.client.request(
         :patch,
         path,
-        body: to_hash.to_json
+        body: to_json
       )
       handle_new_data(response.data)
       self
