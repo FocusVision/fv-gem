@@ -109,6 +109,36 @@ describe FV::ApiResource do
     end
   end
 
+  describe '.save' do
+    it 'updates attributes based on server response' do
+      fake_response = double(FV::HttpResponse)
+      allow(fake_response).to(
+        receive(:data).and_return(attributes: { 'name' => 'server response' })
+      )
+      allow_any_instance_of(FV::Client).to(
+        receive(:request)
+          .with(:patch, '/foo_bars/3', body: {
+            data: {
+              id: 3,
+              type: 'foo_bars',
+              attributes: { 'name' => 'changed' }
+            }
+          }.to_json)
+          .and_return(fake_response)
+      )
+
+      resource = TestSdk::FooBar.new(
+        id: 3,
+        attributes: { 'name' => 'original' },
+        meta: { stuff: 1 }
+      )
+      resource.name = 'changed'
+      resource.save
+
+      expect(resource.name).to eq('server response')
+    end
+  end
+
   describe '.has_many' do
     before(:each) do
       @resource = TestSdk::Foo.new(id: 1)
@@ -217,6 +247,7 @@ describe FV::ApiResource do
   module TestSdk
     extend FV::Client
     class FooBar < FV::ApiResource
+      define_attribute_readers :name
     end
 
     class BelongsToResource < FV::ApiResource
