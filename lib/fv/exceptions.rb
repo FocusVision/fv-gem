@@ -27,6 +27,7 @@ module FV
       404 => 'RecordNotFoundError',
       406 => 'NotAcceptableError',
       415 => 'UnsupportedMediaTypeError',
+      422 => 'UnprocessableEntity',
       423 => 'LockedError',
       500 => 'InternalServerError'
     }.freeze
@@ -103,6 +104,7 @@ module FV
   class RecordNotFoundError < ApiError; end # code: 404
   class NotAcceptableError < ApiError; end # code: 406
   class UnsupportedMediaTypeError < ApiError; end # code: 415
+  class UnprocessableEntity < ApiError; end # code: 422
   class LockedError < ApiError; end # code: 423
   class InternalServerError < ApiError; end # code: 500
 
